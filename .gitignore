@@ -1,0 +1,9 @@
+
+# Ignore the required autodownloaded modules
+node_modules/
+node_modules
+
+# Ignore the per-person database entries
+*.sqlite
+
+
