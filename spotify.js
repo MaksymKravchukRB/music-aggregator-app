@@ -16,7 +16,7 @@ export async function playSpotifyTrack(userSession, trackId) {
   const db = await dbPromise;
   await db.run(
     `
-    INSERT INTO tracks (source, track_id, title, artist, album, uri, preview_url)
+    INSERT INTO history (source, track_id, title, artist, album, uri, preview_url)
     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     "spotify",
     trackId,

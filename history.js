@@ -3,10 +3,10 @@ import dbPromise from "./db.js";
 
 export async function getPlaybackHistory() {
   const db = await dbPromise;
-  return await db.all(`SELECT * FROM tracks ORDER BY played_at DESC`);
+  return await db.all(`SELECT * FROM history ORDER BY played_at DESC`);
 }
 
 export async function clearPlaybackHistory() {
   const db = await dbPromise;
-  await db.run(`DELETE FROM tracks`);
+  await db.run(`DELETE FROM history`);
 }

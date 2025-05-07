@@ -10,9 +10,10 @@ const dbPromise = open({
 export async function initDb() {
   const db = await dbPromise;
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS tracks (
+    CREATE TABLE IF NOT EXISTS history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      source TEXT CHECK(source IN ('spotify', 'bandcamp')),
+      iframe_code TEXT,
+      source TEXT CHECK(source IN ('spotify', 'bandcamp', 'soundcloud')),
       track_id TEXT,
       title TEXT,
       artist TEXT,

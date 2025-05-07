@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import cookieSession from "cookie-session";
 import path from "path";
 import { fileURLToPath } from "url";
-
 import authRoutes, { ensureSpotifyToken } from "./auth.js";
 import { initDb } from "./db.js";
 import { playSpotifyTrack } from "./spotify.js";
