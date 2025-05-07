@@ -1,17 +1,33 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieSession from "cookie-session";
-import authRoutes from "./auth.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import authRoutes, { ensureSpotifyToken } from "./auth.js";
 import { initDb } from "./db.js";
-//("use strict");
+import { playSpotifyTrack } from "./spotify.js";
+import { playBandcampTrack } from "./bandcamp.js";
+import { getPlaybackHistory, clearPlaybackHistory } from "./history.js";
+import {
+  createPlaylist,
+  addTrackToPlaylist,
+  getPlaylist,
+} from "./playlists.js";
+
+("use strict");
 
 dotenv.config();
 
 const app = express();
-const PORT = 8888;
+const PORT = process.env.PORT || 8888;
 
+// Handle __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middleware
 app.use(express.json());
-app.use(express.static("public"));
 app.use(
   cookieSession({
     name: "session",
@@ -20,32 +36,13 @@ app.use(
   })
 );
 
+// Init DB
 await initDb();
 
+// Auth routes
 app.use(authRoutes);
 
-app.get("/", (req, res) => {
-  res.sendFile("index.html", { root: "./public" });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
-
-//
-//
-
-import { ensureSpotifyToken } from "./auth.js";
-import { playSpotifyTrack } from "./spotify.js";
-import { playBandcampTrack } from "./bandcamp.js";
-import { getPlaybackHistory, clearPlaybackHistory } from "./history.js";
-import {
-  createPlaylist,
-  addTrackToPlaylist,
-  getPlaylist,
-  ClearHistory,
-} from "./playlists.js";
-
+// API endpoints
 app.get("/track/spotify/:id", ensureSpotifyToken, async (req, res) => {
   try {
     const data = await playSpotifyTrack(req.session, req.params.id);
@@ -58,7 +55,7 @@ app.get("/track/spotify/:id", ensureSpotifyToken, async (req, res) => {
 app.get("/track/bandcamp", async (req, res) => {
   try {
     const data = await playBandcampTrack(req.query.url);
-    res.json(data); // includes audioUrl
+    res.json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -97,11 +94,17 @@ app.get("/playlist/:name", async (req, res) => {
   res.json(tracks);
 });
 
-app.post("/playlist/clearhistory", async (req, res) => {
-  try {
-    await ClearHistory();
-    res.sendStatus(200);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+// === Serve React frontend in production ===
+if (process.env.NODE_ENV === "production") {
+  const clientBuildPath = path.resolve(__dirname, "client", "build");
+  app.use(express.static(clientBuildPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
