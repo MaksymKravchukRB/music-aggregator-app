@@ -5,4 +5,4 @@ npm install
 cp .env.example .env  # fill with Spotify client info
 
 # 3. Run the app
-npm start
+npm run dev
