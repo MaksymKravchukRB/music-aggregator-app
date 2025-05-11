@@ -33,7 +33,7 @@ router.get("/callback", async (req, res) => {
     const data = await spotifyApi.authorizationCodeGrant(code);
     req.session.access_token = data.body.access_token;
     req.session.refresh_token = data.body.refresh_token;
-    res.redirect("/");
+    res.redirect(process.env.FRONTEND_URL);
   } catch (err) {
     console.error("Error getting Tokens:", err);
     res.status(500).send("Auth failed");

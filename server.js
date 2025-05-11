@@ -5,7 +5,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import authRoutes, { ensureSpotifyToken } from "./auth.js";
 import { initDb } from "./db.js";
-import { playSpotifyTrack } from "./spotify.js";
+import {
+  playSpotifyTrack,
+  searchSpotifyEmbed,
+  searchSpotifyEmbedMultiple,
+} from "./spotify.js";
 import { playBandcampTrack } from "./bandcamp.js";
 import { getPlaybackHistory, clearPlaybackHistory } from "./history.js";
 import {
@@ -42,6 +46,22 @@ await initDb();
 app.use(authRoutes);
 
 // API endpoints
+app.get("/search/spotify", ensureSpotifyToken, async (req, res) => {
+  try {
+    const query = req.query.q;
+    const type = req.query.type || "track";
+
+    if (!query) {
+      return res.status(400).json({ error: "Missing search query (q)" });
+    }
+
+    const results = await searchSpotifyEmbedMultiple(req.session, query, type);
+    res.json({ results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/track/spotify/:id", ensureSpotifyToken, async (req, res) => {
   try {
     const data = await playSpotifyTrack(req.session, req.params.id);
@@ -69,6 +89,41 @@ app.delete("/history", async (req, res) => {
   try {
     await clearPlaybackHistory();
     res.status(200).json({ message: "Playback history cleared" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/history", async (req, res) => {
+  const {
+    iframe_code,
+    source,
+    track_id,
+    title,
+    artist,
+    album,
+    uri,
+    preview_url,
+  } = req.body;
+
+  try {
+    const db = await import("./db.js").then((mod) => mod.default);
+    await db.run(
+      `
+      INSERT INTO history (iframe_code, source, track_id, title, artist, album, uri, preview_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+      iframe_code,
+      source,
+      track_id,
+      title,
+      artist,
+      album,
+      uri,
+      preview_url
+    );
+
+    res.sendStatus(201);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
