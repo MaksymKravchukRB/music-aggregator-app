@@ -13,7 +13,7 @@ export async function addTrackToPlaylist(playlistName, trackId) {
     playlistName
   );
   const track = await db.get(
-    `SELECT id FROM tracks WHERE track_id = ?`,
+    `SELECT id FROM history WHERE track_id = ?`,
     trackId
   );
 
