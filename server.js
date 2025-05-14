@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+import eventBus from "./events.js";
+import "./listeners/history-logger.js";
 import cookieSession from "cookie-session";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -42,6 +44,12 @@ await initDb();
 app.use(authRoutes);
 
 // API endpoints
+
+app.post("/playback/event", (req, res) => {
+  eventBus.emit("track:played", req.body);
+  res.sendStatus(204);
+});
+
 app.get("/search/spotify", ensureSpotifyToken, async (req, res) => {
   try {
     const query = req.query.q;

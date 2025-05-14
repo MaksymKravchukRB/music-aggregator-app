@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import IframeLoader from "./IframeLoader";
-import { logHistoryEntry } from "../utils/logHistory";
 
 const SpotifySearchBar = ({ onTrackPlayed }) => {
   const [query, setQuery] = useState("");
@@ -10,7 +9,7 @@ const SpotifySearchBar = ({ onTrackPlayed }) => {
   const [selectedMetadata, setSelectedMetadata] = useState(null);
   const [error, setError] = useState("");
   const inputRef = useRef();
-  const lastLoggedTrackId = useRef(null); // to track what was logged
+  const lastLoggedTrackId = useRef(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -57,21 +56,28 @@ const SpotifySearchBar = ({ onTrackPlayed }) => {
 
     const currentTrackId = selectedMetadata.track_id;
 
-    // Prevent duplicate logging
     if (lastLoggedTrackId.current === currentTrackId) return;
 
-    const logAndNotify = async () => {
-      await logHistoryEntry({
-        iframe_code: selectedEmbedUrl,
-        ...selectedMetadata,
-      });
+    const sendPlaybackEvent = async () => {
+      try {
+        await fetch("/playback/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            iframe_code: selectedEmbedUrl,
+            ...selectedMetadata,
+          }),
+        });
 
-      lastLoggedTrackId.current = currentTrackId;
+        lastLoggedTrackId.current = currentTrackId;
 
-      if (onTrackPlayed) onTrackPlayed();
+        if (onTrackPlayed) onTrackPlayed();
+      } catch (err) {
+        console.error("Failed to log playback event:", err.message);
+      }
     };
 
-    logAndNotify();
+    sendPlaybackEvent();
   }, [selectedEmbedUrl, selectedMetadata, onTrackPlayed]);
 
   return (
