@@ -5,11 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import authRoutes, { ensureSpotifyToken } from "./auth.js";
 import { initDb } from "./db.js";
-import {
-  playSpotifyTrack,
-  searchSpotifyEmbed,
-  searchSpotifyEmbedMultiple,
-} from "./spotify.js";
+import { playSpotifyTrack, spotifySearch } from "./spotify.js";
 import { playBandcampTrack } from "./bandcamp.js";
 import { getPlaybackHistory, clearPlaybackHistory } from "./history.js";
 import {
@@ -54,8 +50,7 @@ app.get("/search/spotify", ensureSpotifyToken, async (req, res) => {
     if (!query) {
       return res.status(400).json({ error: "Missing search query (q)" });
     }
-
-    const results = await searchSpotifyEmbedMultiple(req.session, query, type);
+    const results = await spotifySearch(req.session, query, type);
     res.json({ results });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -64,8 +59,7 @@ app.get("/search/spotify", ensureSpotifyToken, async (req, res) => {
 
 app.get("/track/spotify/:id", ensureSpotifyToken, async (req, res) => {
   try {
-    const data = await playSpotifyTrack(req.session, req.params.id);
-    res.json(data);
+    // EMPTY for now
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
