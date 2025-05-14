@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
+import { getFreshSpotifyAccessToken } from "./auth-utils.js";
 import SpotifyWebApi from "spotify-web-api-node";
 ("use strict");
 
@@ -48,14 +49,7 @@ export { spotifyApi };
 
 export async function ensureSpotifyToken(req, res, next) {
   try {
-    if (!req.session.refresh_token)
-      return res.status(401).send("No refresh token");
-
-    spotifyApi.setRefreshToken(req.session.refresh_token);
-    const { body } = await spotifyApi.refreshAccessToken();
-
-    req.session.access_token = body.access_token;
-    spotifyApi.setAccessToken(body.access_token);
+    await getFreshSpotifyAccessToken(req.session);
     next();
   } catch (err) {
     console.error("Token refresh error:", err);

@@ -4,8 +4,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "server": "nodemon server.js",
+    "start": "node --import ./proxy-fetch.js server.js",
+    "server": "nodemon --experimental-import-meta-resolve --import ./proxy.js server.js",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
@@ -15,6 +15,7 @@
     "cookie-session": "^2.0.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
     "open": "^9.1.0",
     "spotify-web-api-node": "^5.0.2",
     "sqlite": "^4.2.1",
