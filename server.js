@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 import authRoutes, { ensureSpotifyToken } from "./auth.js";
 import { initDb } from "./db.js";
 import { playSpotifyTrack, spotifySearch } from "./spotify.js";
-import { playBandcampTrack } from "./bandcamp.js";
+import { BandcampSearch } from "./bandcamp.js";
 import { getPlaybackHistory, clearPlaybackHistory } from "./history.js";
 import {
   createPlaylist,
@@ -61,6 +61,23 @@ app.get("/search/spotify", ensureSpotifyToken, async (req, res) => {
     const results = await spotifySearch(req.session, query, type);
     res.json({ results });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/search/bandcamp", async (req, res) => {
+  try {
+    const query = req.query.q;
+    const type = req.query.type || "track";
+
+    if (!query) {
+      return res.status(400).json({ error: "Missing search query (q)" });
+    }
+
+    const results = await BandcampSearch(query, type);
+    res.json({ results });
+  } catch (e) {
+    console.error("Bandcamp search failed:", e);
     res.status(500).json({ error: e.message });
   }
 });

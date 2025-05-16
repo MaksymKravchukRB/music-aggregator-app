@@ -1,47 +1,50 @@
-import axios from "axios";
+import fetch from "node-fetch";
 import * as cheerio from "cheerio";
-import dbPromise from "./db.js";
-//("use strict");
+import { search } from "bandcamp-scraper";
 
-export async function getBandcampMetadata(trackUrl) {
-  const { data: html } = await axios.get(trackUrl);
-  const $ = cheerio.load(html);
+/**
+ * Search Bandcamp and return embeddable metadata
+ * @param {string} query
+ * @param {string} type - "track" or "album"
+ */
+export async function BandcampSearch(query, type = "track") {
+  return new Promise((resolve, reject) => {
+    search({ query, page: 1 }, async (err, results) => {
+      if (err) return reject(err);
 
-  const dataAttr = $("[data-tralbum]").attr("data-tralbum");
-  if (!dataAttr) throw new Error("data-tralbum attribute not found");
+      // Filter by type (track or album)
+      const filtered = results.filter((r) => r.type === type).slice(0, 5);
 
-  let parsed;
-  try {
-    parsed = JSON.parse(dataAttr);
-  } catch (e) {
-    throw new Error("Failed to parse data-tralbum JSON");
-  }
+      // Fetch embed URL for each result
+      const withEmbeds = await Promise.all(
+        filtered.map(async (item) => {
+          let embed_url = item.url;
 
-  const track = parsed.trackinfo?.[0];
-  const audioUrl = track?.file?.["mp3-128"] || null;
-  const title = track?.title || parsed.current?.title || "Unknown Title";
-  const artist = parsed.artist || "Unknown Artist";
+          try {
+            const html = await fetch(item.url).then((r) => r.text());
+            const $ = cheerio.load(html);
 
-  return { title, artist, audioUrl };
-}
+            // Pull from the true embed tag
+            const ogEmbed = $('meta[property="og:video"]').attr("content");
+            if (ogEmbed) embed_url = ogEmbed;
+          } catch (e) {
+            console.warn(`Failed to get embed URL for ${item.url}:`, e.message);
+          }
 
-export async function playBandcampTrack(trackUrl) {
-  const metadata = await getBandcampMetadata(trackUrl);
-  if (!metadata.audioUrl) throw new Error("No playable audio URL found");
+          return {
+            id: item.url,
+            type,
+            title: item.name,
+            artist: item.bandName,
+            album: item.name,
+            url: item.url,
+            image: item.imageUrl,
+            embed_url,
+          };
+        })
+      );
 
-  const db = await dbPromise;
-  await db.run(
-    `
-    INSERT INTO history (source, track_id, title, artist, album, uri, preview_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    "bandcamp",
-    trackUrl,
-    metadata.title,
-    metadata.artist,
-    null,
-    trackUrl,
-    metadata.audioUrl
-  );
-
-  return metadata;
+      resolve(withEmbeds);
+    });
+  });
 }
