@@ -35,7 +35,7 @@ export async function BandcampSearch(query, type = "track") {
             id: item.url,
             type,
             title: item.name,
-            artist: item.bandName,
+            artist: item.artist || item.bandName || "Unknown Artist",
             album: item.name,
             url: item.url,
             image: item.imageUrl,
