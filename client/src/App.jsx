@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import LoginButton from "./components/LoginButton";
 import SpotifySearchBar from "./components/SpotifySearchbar";
 import BandcampSearch from "./components/BandcampSearch";
+import SoundCloudSearchBar from "./components/SoundCloudSearchBar";
 import LiveHistory from "./components/LiveHistory";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
       <LoginButton />
       <SpotifySearchBar onTrackPlayed={triggerHistoryRefresh} />
       <BandcampSearch onTrackPlayed={triggerHistoryRefresh} />
+      <SoundCloudSearchBar onTrackPlayed={triggerHistoryRefresh} />
       <LiveHistory refreshTrigger={refreshKey} />
       <button onClick={clearHistory}>Clear History</button>
     </div>
