@@ -3,6 +3,7 @@ import IframeLoader from "./IframeLoader";
 
 const SoundCloudSearchBar = ({ onTrackPlayed }) => {
   const [query, setQuery] = useState("");
+  const [type, setType] = useState("track");
   const [dropdownResults, setDropdownResults] = useState([]);
   const [selectedEmbedUrl, setSelectedEmbedUrl] = useState("");
   const [selectedMetadata, setSelectedMetadata] = useState(null);
@@ -15,7 +16,7 @@ const SoundCloudSearchBar = ({ onTrackPlayed }) => {
 
     try {
       const res = await fetch(
-        `/search/soundcloud?q=${encodeURIComponent(query)}`
+        `/search/soundcloud?q=${encodeURIComponent(query)}&type=${type}`
       );
       if (!res.ok) throw new Error("SoundCloud search failed");
 
@@ -46,11 +47,14 @@ const SoundCloudSearchBar = ({ onTrackPlayed }) => {
     inputRef.current.blur();
   };
 
+  const toggleType = () => {
+    setType((prev) => (prev === "track" ? "album" : "track"));
+  };
+
   useEffect(() => {
     if (!selectedEmbedUrl || !selectedMetadata) return;
 
     const currentTrackId = selectedMetadata.track_id;
-
     if (lastLoggedTrackId.current === currentTrackId) return;
 
     const sendPlaybackEvent = async () => {
@@ -65,7 +69,6 @@ const SoundCloudSearchBar = ({ onTrackPlayed }) => {
         });
 
         lastLoggedTrackId.current = currentTrackId;
-
         if (onTrackPlayed) onTrackPlayed();
       } catch (err) {
         console.error("Failed to log playback event:", err.message);
@@ -84,12 +87,12 @@ const SoundCloudSearchBar = ({ onTrackPlayed }) => {
         padding: "1rem",
       }}
     >
-      <h2>Search SoundCloud</h2>
+      <h2>Search SoundCloud ({type})</h2>
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search SoundCloud..."
+          placeholder={`Search for a ${type}`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -97,6 +100,9 @@ const SoundCloudSearchBar = ({ onTrackPlayed }) => {
         />
         <button onClick={handleSearch} style={{ padding: "0.5rem 1rem" }}>
           Search
+        </button>
+        <button onClick={toggleType} style={{ padding: "0.5rem 1rem" }}>
+          {type === "track" ? "Album Mode" : "Track Mode"}
         </button>
       </div>
 
@@ -129,7 +135,8 @@ const SoundCloudSearchBar = ({ onTrackPlayed }) => {
                 borderBottom: "1px solid #eee",
               }}
             >
-              🎧 <strong>{item.title}</strong> — {item.artist}
+              {type === "album" ? "📀" : "🎧"} <strong>{item.title}</strong> —{" "}
+              {item.artist}
             </li>
           ))}
         </ul>

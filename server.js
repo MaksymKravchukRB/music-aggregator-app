@@ -84,17 +84,14 @@ app.get("/search/bandcamp", async (req, res) => {
 });
 
 app.get("/search/soundcloud", async (req, res) => {
-  try {
-    const query = req.query.q;
-    if (!query) {
-      return res.status(400).json({ error: "Missing search query (q)" });
-    }
+  const { q, type = "track" } = req.query;
+  if (!q) return res.status(400).json({ error: "Missing search query" });
 
-    const results = await SoundCloudSearch(query);
+  try {
+    const results = await SoundCloudSearch(q, type);
     res.json({ results });
-  } catch (e) {
-    console.error("SoundCloud search error:", e);
-    res.status(500).json({ error: e.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
