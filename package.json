@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node --import ./proxy-fetch.js server.js",
+    "build:css": "postcss src/tailwind.css -o public/build/tailwind.css",
     "server": "nodemon --experimental-import-meta-resolve --import ./proxy.js server.js",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\""
@@ -23,7 +24,10 @@
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.21",
     "concurrently": "^8.2.2",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7"
   }
 }

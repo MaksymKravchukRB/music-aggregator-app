@@ -15,6 +15,9 @@ import {
   createPlaylist,
   addTrackToPlaylist,
   getPlaylist,
+  deletePlaylist,
+  getAllPlaylists,
+  removeTrackFromPlaylist,
 } from "./playlists.js";
 
 ("use strict");
@@ -161,23 +164,50 @@ app.post("/history", async (req, res) => {
   }
 });
 
-app.post("/playlist", async (req, res) => {
-  await createPlaylist(req.body.name);
-  res.sendStatus(201);
+app.get("/playlists", async (req, res) => {
+  try {
+    const list = await getAllPlaylists();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.post("/playlist/:name/add", async (req, res) => {
+app.post("/playlists", async (req, res) => {
   try {
-    await addTrackToPlaylist(req.params.name, req.body.track_id);
+    await createPlaylist(req.body.name);
+    res.sendStatus(201);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/playlists/:name", async (req, res) => {
+  try {
+    const tracks = await getPlaylist(req.params.name);
+    res.json(tracks);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/playlists/:name", async (req, res) => {
+  try {
+    await deletePlaylist(req.params.name);
     res.sendStatus(200);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-app.get("/playlist/:name", async (req, res) => {
-  const tracks = await getPlaylist(req.params.name);
-  res.json(tracks);
+app.delete("/playlists/:name/:track_id", async (req, res) => {
+  try {
+    const { name, track_id } = req.params;
+    await removeTrackFromPlaylist(name, track_id);
+    res.sendStatus(200);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // === Serve React frontend in production ===

@@ -5,6 +5,7 @@ import BandcampSearch from "./components/BandcampSearch";
 import SoundCloudSearchBar from "./components/SoundCloudSearchBar";
 import UnifiedSearchBar from "./components/UnifiedSearchBar";
 import LiveHistory from "./components/LiveHistory";
+import PlaylistManager from "./components/PlaylistManager";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
