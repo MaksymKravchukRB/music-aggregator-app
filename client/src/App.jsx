@@ -3,6 +3,7 @@ import LoginButton from "./components/LoginButton";
 import SpotifySearchBar from "./components/SpotifySearchbar";
 import BandcampSearch from "./components/BandcampSearch";
 import SoundCloudSearchBar from "./components/SoundCloudSearchBar";
+import UnifiedSearchBar from "./components/UnifiedSearchBar";
 import LiveHistory from "./components/LiveHistory";
 
 function App() {
@@ -20,10 +21,12 @@ function App() {
   return (
     <div style={{ maxWidth: 600, margin: "auto" }}>
       <h1>Unified Music Playback</h1>
+      <>If you want to search Spotify, you will have to login: </>
       <LoginButton />
       <SpotifySearchBar onTrackPlayed={triggerHistoryRefresh} />
       <BandcampSearch onTrackPlayed={triggerHistoryRefresh} />
       <SoundCloudSearchBar onTrackPlayed={triggerHistoryRefresh} />
+      <UnifiedSearchBar onTrackPlayed={triggerHistoryRefresh} />
       <LiveHistory refreshTrigger={refreshKey} />
       <button onClick={clearHistory}>Clear History</button>
     </div>
