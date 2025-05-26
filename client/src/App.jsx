@@ -6,6 +6,7 @@ import SoundCloudSearchBar from "./components/SoundCloudSearchBar";
 import UnifiedSearchBar from "./components/UnifiedSearchBar";
 import LiveHistory from "./components/LiveHistory";
 import PlaylistManager from "./components/PlaylistManager";
+import "./styles.css"; // Import global stylesheet
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -20,16 +21,26 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "auto" }}>
-      <h1>Unified Music Playback</h1>
-      <>If you want to search Spotify, you will have to login: </>
-      <LoginButton />
-      <SpotifySearchBar onTrackPlayed={triggerHistoryRefresh} />
-      <BandcampSearch onTrackPlayed={triggerHistoryRefresh} />
-      <SoundCloudSearchBar onTrackPlayed={triggerHistoryRefresh} />
-      <UnifiedSearchBar onTrackPlayed={triggerHistoryRefresh} />
-      <LiveHistory refreshTrigger={refreshKey} />
-      <button onClick={clearHistory}>Clear History</button>
+    <div className="app">
+      <aside className="sidebar">
+        <PlaylistManager />
+      </aside>
+
+      <main className="content">
+        <div className="content-inner">
+          <h1>Unified Music Playback</h1>
+          <p>If you want to search Spotify, you will have to login:</p>
+          <LoginButton />
+          <SpotifySearchBar onTrackPlayed={triggerHistoryRefresh} />
+          <BandcampSearch onTrackPlayed={triggerHistoryRefresh} />
+          <SoundCloudSearchBar onTrackPlayed={triggerHistoryRefresh} />
+          <UnifiedSearchBar onTrackPlayed={triggerHistoryRefresh} />
+          <LiveHistory refreshTrigger={refreshKey} />
+          <button className="clear-btn" onClick={clearHistory}>
+            Clear History
+          </button>
+        </div>
+      </main>
     </div>
   );
 }
