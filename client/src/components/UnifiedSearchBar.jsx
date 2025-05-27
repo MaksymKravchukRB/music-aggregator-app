@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import IframeLoader from "./IframeLoader";
 
 const serviceSupportsAlbum = {
   spotify: true,
@@ -7,17 +6,14 @@ const serviceSupportsAlbum = {
   soundcloud: true,
 };
 
-const UnifiedSearchBar = ({ onTrackPlayed }) => {
+const UnifiedSearchBar = () => {
   const [platform, setPlatform] = useState("spotify");
   const [type, setType] = useState("track");
   const [query, setQuery] = useState("");
   const [dropdownResults, setDropdownResults] = useState([]);
-  const [selectedEmbedUrl, setSelectedEmbedUrl] = useState("");
-  const [selectedMetadata, setSelectedMetadata] = useState(null);
   const [error, setError] = useState("");
   const inputRef = useRef();
   const containerRef = useRef();
-  const lastLoggedTrackId = useRef(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -40,11 +36,7 @@ const UnifiedSearchBar = ({ onTrackPlayed }) => {
   };
 
   const handleSelect = (item) => {
-    setSelectedEmbedUrl(item.embed_url);
-    setDropdownResults([]);
-    setQuery("");
-
-    setSelectedMetadata({
+    const metadata = {
       source: platform,
       track_id: item.id,
       title: item.title,
@@ -52,8 +44,21 @@ const UnifiedSearchBar = ({ onTrackPlayed }) => {
       album: item.album || null,
       uri: item.url,
       preview_url: null,
-    });
+    };
 
+    const embedUrl = item.embed_url;
+
+    window.dispatchEvent(
+      new CustomEvent("playTrack", {
+        detail: {
+          embed_url: embedUrl,
+          metadata,
+        },
+      })
+    );
+
+    setDropdownResults([]);
+    setQuery("");
     inputRef.current.blur();
   };
 
@@ -61,36 +66,7 @@ const UnifiedSearchBar = ({ onTrackPlayed }) => {
     setType((prev) => (prev === "track" ? "album" : "track"));
   };
 
-  useEffect(() => {
-    const currentTrackId = selectedMetadata?.track_id;
-    if (
-      !selectedEmbedUrl ||
-      !selectedMetadata ||
-      lastLoggedTrackId.current === currentTrackId
-    )
-      return;
-
-    const sendPlaybackEvent = async () => {
-      try {
-        await fetch("/playback/event", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            iframe_code: selectedEmbedUrl,
-            ...selectedMetadata,
-          }),
-        });
-
-        lastLoggedTrackId.current = currentTrackId;
-        if (onTrackPlayed) onTrackPlayed();
-      } catch (err) {
-        console.error("Playback event failed:", err.message);
-      }
-    };
-
-    sendPlaybackEvent();
-  }, [selectedEmbedUrl, selectedMetadata, onTrackPlayed]);
-
+  // Hide dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -196,10 +172,6 @@ const UnifiedSearchBar = ({ onTrackPlayed }) => {
           ))}
         </ul>
       )}
-
-      <div style={{ marginTop: "1rem" }}>
-        <IframeLoader embed_url={selectedEmbedUrl} />
-      </div>
     </div>
   );
 };

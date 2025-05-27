@@ -1,30 +1,35 @@
 import React, { useEffect, useState } from "react";
-import HistoryList from "./HistoryList";
 
-const LiveHistory = ({ refreshTrigger }) => {
+const LiveHistory = () => {
   const [history, setHistory] = useState([]);
 
-  const fetchHistory = async () => {
-    try {
-      const res = await fetch("/history");
-      const data = await res.json();
-      setHistory(data);
-    } catch (err) {
-      console.error("Failed to load history:", err);
-    }
+  const loadHistory = async () => {
+    const res = await fetch("/history");
+    const data = await res.json();
+    setHistory(data);
   };
 
-  // Load on mount
   useEffect(() => {
-    fetchHistory();
+    loadHistory();
+
+    const handler = () => loadHistory();
+    window.addEventListener("history:refresh", handler);
+
+    return () => window.removeEventListener("history:refresh", handler);
   }, []);
 
-  // Reload on trigger update
-  useEffect(() => {
-    if (refreshTrigger > 0) fetchHistory();
-  }, [refreshTrigger]);
-
-  return <HistoryList history={history} />;
+  return (
+    <div>
+      <h2>Playback History</h2>
+      <ul>
+        {history.map((track, index) => (
+          <li key={index}>
+            {track.source.toUpperCase()}: {track.title} by {track.artist}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 export default LiveHistory;

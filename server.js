@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import eventBus from "./events.js";
 import "./listeners/history-logger.js";
+import "./listeners/playlist-logger.js";
 import cookieSession from "cookie-session";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -206,6 +207,18 @@ app.delete("/playlists/:name/:track_id", async (req, res) => {
     await removeTrackFromPlaylist(name, track_id);
     res.sendStatus(200);
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/playlists/:name/add", async (req, res) => {
+  const { name } = req.params;
+
+  try {
+    eventBus.emit("playlist:add-latest", { playlistName: name });
+    res.sendStatus(200);
+  } catch (e) {
+    console.error("[server] playlist:add-latest failed:", e);
     res.status(500).json({ error: e.message });
   }
 });

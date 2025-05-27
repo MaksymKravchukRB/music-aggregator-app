@@ -1,23 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import LoginButton from "./components/LoginButton";
-import SpotifySearchBar from "./components/SpotifySearchbar";
-import BandcampSearch from "./components/BandcampSearch";
-import SoundCloudSearchBar from "./components/SoundCloudSearchBar";
 import UnifiedSearchBar from "./components/UnifiedSearchBar";
+import IframeLoader from "./components/IframeLoader";
 import LiveHistory from "./components/LiveHistory";
 import PlaylistManager from "./components/PlaylistManager";
-import "./styles.css"; // Import global stylesheet
+import "./styles.css";
 
 function App() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const triggerHistoryRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
-
   const clearHistory = async () => {
     await fetch("/history", { method: "DELETE" });
-    triggerHistoryRefresh();
+
+    // Emit event to refresh history
+    window.dispatchEvent(new Event("history:refresh"));
   };
 
   return (
@@ -31,11 +25,9 @@ function App() {
           <h1>Unified Music Playback</h1>
           <p>If you want to search Spotify, you will have to login:</p>
           <LoginButton />
-          <SpotifySearchBar onTrackPlayed={triggerHistoryRefresh} />
-          <BandcampSearch onTrackPlayed={triggerHistoryRefresh} />
-          <SoundCloudSearchBar onTrackPlayed={triggerHistoryRefresh} />
-          <UnifiedSearchBar onTrackPlayed={triggerHistoryRefresh} />
-          <LiveHistory refreshTrigger={refreshKey} />
+          <UnifiedSearchBar />
+          <IframeLoader />
+          <LiveHistory />
           <button className="clear-btn" onClick={clearHistory}>
             Clear History
           </button>

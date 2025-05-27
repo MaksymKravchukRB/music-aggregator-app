@@ -1,6 +1,9 @@
 import eventBus from "../events.js";
 import dbPromise from "../db.js";
 
+// In-memory latest track cache
+let lastPlayedTrack = null;
+
 eventBus.on("track:played", async (trackData) => {
   const {
     iframe_code,
@@ -30,8 +33,13 @@ eventBus.on("track:played", async (trackData) => {
       preview_url
     );
 
+    lastPlayedTrack = trackData;
+
     console.log("[track:played] History entry logged:", title);
   } catch (err) {
     console.error("[track:played] Logging failed:", err.message);
   }
 });
+
+// Expose the last played track for other listeners
+eventBus.getLastPlayedTrack = () => lastPlayedTrack;

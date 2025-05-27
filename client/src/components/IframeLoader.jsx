@@ -1,74 +1,93 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import AddToPlaylistButton from "./AddToPlaylistButton";
 
-const IframeLoader = ({ embed_url, metadata = null }) => {
+const IframeLoader = () => {
+  const [embedUrl, setEmbedUrl] = useState("");
+  const [metadata, setMetadata] = useState(null);
+  const lastPlayedRef = useRef(null);
+
+  // Listen to playTrack event
   useEffect(() => {
-    if (!embed_url || !metadata) return;
-
-    const logPlayback = async () => {
-      const { source, track_id, title, artist, album, uri, preview_url } =
-        metadata;
-
-      const res = await fetch("/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          iframe_code: embed_url,
-          source,
-          track_id,
-          title,
-          artist,
-          album,
-          uri,
-          preview_url,
-        }),
-      });
-
-      if (!res.ok) console.error("Failed to log track history");
+    const handler = (e) => {
+      const { embed_url, metadata } = e.detail;
+      setEmbedUrl(embed_url);
+      setMetadata(metadata);
     };
 
-    logPlayback();
-  }, [embed_url, metadata]);
+    window.addEventListener("playTrack", handler);
+    return () => window.removeEventListener("playTrack", handler);
+  }, []);
 
-  if (!embed_url) return null;
+  // Trigger playback logging
+  useEffect(() => {
+    if (!embedUrl || !metadata) return;
 
-  if (embed_url.includes("spotify")) {
-    return (
-      <iframe
-        style={{ borderRadius: "12px" }}
-        src={embed_url}
-        width="100%"
-        height="352"
-        frameBorder="0"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-      ></iframe>
-    );
-  }
+    const currentId = metadata.track_id;
+    if (lastPlayedRef.current === currentId) return;
+    lastPlayedRef.current = currentId;
 
-  if (embed_url.includes("soundcloud")) {
-    return (
-      <iframe
-        width="100%"
-        height="300"
-        scrolling="no"
-        frameBorder="no"
-        allow="autoplay"
-        src={embed_url}
-      ></iframe>
-    );
-  }
+    const notifyPlayback = async () => {
+      try {
+        const res = await fetch("/playback/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            iframe_code: embedUrl,
+            ...metadata,
+          }),
+        });
 
-  if (embed_url.includes("bandcamp")) {
-    return (
-      <iframe
-        style={{ border: 0, width: "100%", height: "120px" }}
-        src={embed_url}
-        seamless
-      ></iframe>
-    );
-  }
+        if (res.ok) {
+          window.dispatchEvent(new Event("history:refresh"));
+        } else {
+          console.error("Failed to log playback");
+        }
+      } catch (err) {
+        console.error("Logging error:", err.message);
+      }
+    };
 
-  return null;
+    notifyPlayback();
+  }, [embedUrl, metadata]);
+
+  if (!embedUrl) return null;
+
+  return (
+    <div>
+      {embedUrl.includes("spotify") && (
+        <iframe
+          style={{ borderRadius: "12px" }}
+          src={embedUrl}
+          width="100%"
+          height="352"
+          frameBorder="0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        ></iframe>
+      )}
+
+      {embedUrl.includes("soundcloud") && (
+        <iframe
+          width="100%"
+          height="300"
+          scrolling="no"
+          frameBorder="no"
+          allow="autoplay"
+          src={embedUrl}
+        ></iframe>
+      )}
+
+      {embedUrl.includes("bandcamp") && (
+        <iframe
+          style={{ border: 0, width: "100%", height: "120px" }}
+          src={embedUrl}
+          seamless
+        ></iframe>
+      )}
+
+      {metadata && <AddToPlaylistButton track={metadata} embedUrl={embedUrl} />}
+    </div>
+  );
 };
 
 export default IframeLoader;

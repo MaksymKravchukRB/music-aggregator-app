@@ -9,6 +9,7 @@ const dbPromise = open({
 
 export async function initDb() {
   const db = await dbPromise;
+  await db.run("PRAGMA foreign_keys = ON");
   await db.exec(`
     CREATE TABLE IF NOT EXISTS history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,15 +23,24 @@ export async function initDb() {
       preview_url TEXT,
       played_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
     CREATE TABLE IF NOT EXISTS playlists (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL
     );
+
     CREATE TABLE IF NOT EXISTS playlist_tracks (
-      playlist_id INTEGER,
-      track_id INTEGER,
-      FOREIGN KEY (playlist_id) REFERENCES playlists(id),
-      FOREIGN KEY (track_id) REFERENCES tracks(id)
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      playlist_id INTEGER NOT NULL,
+      iframe_code TEXT,
+      source TEXT CHECK(source IN ('spotify', 'bandcamp', 'soundcloud')),
+      track_id TEXT,
+      title TEXT,
+      artist TEXT,
+      album TEXT,
+      uri TEXT,
+      preview_url TEXT,
+      FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE
     );
   `);
 }
