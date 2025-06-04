@@ -10,3 +10,8 @@ export async function clearPlaybackHistory() {
   const db = await dbPromise;
   await db.run(`DELETE FROM history`);
 }
+
+export async function deletePlaybackEntry(id) {
+  const db = await dbPromise;
+  await db.run(`DELETE FROM history WHERE id = ?`, id);
+}

@@ -11,7 +11,11 @@ import { initDb } from "./db.js";
 import { playSpotifyTrack, spotifySearch } from "./spotify.js";
 import { BandcampSearch } from "./bandcamp.js";
 import { SoundCloudSearch } from "./soundcloud.js";
-import { getPlaybackHistory, clearPlaybackHistory } from "./history.js";
+import {
+  getPlaybackHistory,
+  clearPlaybackHistory,
+  deletePlaybackEntry,
+} from "./history.js";
 import {
   createPlaylist,
   addTrackToPlaylist,
@@ -125,6 +129,15 @@ app.delete("/history", async (req, res) => {
   try {
     await clearPlaybackHistory();
     res.status(200).json({ message: "Playback history cleared" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/history/:id", async (req, res) => {
+  try {
+    await deletePlaybackEntry(req.params.id);
+    res.sendStatus(200);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
